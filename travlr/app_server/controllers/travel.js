@@ -1,13 +1,25 @@
-const fs = require('fs');
-const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-const trips = JSON.parse(fs.readFileSync('app_server/data/trips.json', 'utf8'));
+const axios = require('axios');
+const tripsEndpoint = "http://localhost:3000/api/trips";
 
-/* GET travel view. */
-const travel = (req, res) => {
-    pageTitle = packageJson.description + ' | Travel';
-    res.render('travel', { title: pageTitle, trips });
+const tripList = async function (req, res, next) {
+  try {
+    const response = await axios.get(tripsEndpoint);
+    const json = response.data;
+    let message = null;
+    if (!(json instanceof Array)) {
+      message = "API lookup error";
+      json = [];
+    } else {
+      if (!json.length) {
+        message = "No trips exist in our database!";
+      }
+    }
+    res.render("travel", { title: "Travlr Getaways", trips: json });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 };
 
 module.exports = {
-    travel
+  tripList,
 };
